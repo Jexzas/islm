@@ -59,7 +59,7 @@ def respond(prompt, text, table):
                     counter += 1
         else:
             nexties = convertTextToNextTable(text)
-            frequency_table = convertTableToFreqTable(nexties)
+            table = convertTableToFreqTable(nexties)
 
     if match == False:
         matchWord = "the"
