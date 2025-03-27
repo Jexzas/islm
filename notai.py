@@ -3,7 +3,8 @@ import random
 import re
 import json
 api = "https://api.dictionaryapi.dev/api/v2/entries/en/"
-path = "./book.txt"
+mode = input("Are you using training mode? 1 for yes, 2 for no")
+path = "./book.txt" if mode == "1" else "./book2.txt"
 text = ""
 words = []
 with open(path, "r", encoding="UTF-8") as file:
@@ -40,7 +41,7 @@ def convertTableToFreqTable(table):
     return actualFinalTable 
 frequency_table = []
 
-def respond(prompt, text):
+def respond(prompt, text, table):
     words = prompt.lower().split()
     match = False
     matchWord = ""
@@ -48,35 +49,39 @@ def respond(prompt, text):
     while counter < len(words):
         rand = random.randint(0, len(words) -1)
         word = words[rand]
-        for x in frequency_table:
-            if word == x:
-                match = True
-                counter += 1
-                matchWord = word
-            else:
-                counter += 1
+        if len(table) > 0:
+            for x in table:
+                if word == x:
+                    match = True
+                    counter += 1
+                    matchWord = word
+                else:
+                    counter += 1
+        else:
+            nexties = convertTextToNextTable(text)
+            frequency_table = convertTableToFreqTable(nexties)
+
     if match == False:
         matchWord = "the"
     responseString = " "
-    while responseString[len(responseString) - 1] != "." and len(responseString) < 600:
-        for x in frequency_table:
+    while len(responseString) < 600:
+        for x in table.keys():
             if x == matchWord:
-                if matchWord != frequency_table[x]:
-                    responseString += frequency_table[x] + " "
-                    matchWord = frequency_table[x]
+                if matchWord != table[x]:
+                    responseString += table[x] + " "
+                    matchWord = table[x]
                 else:
-                    anotherRand = random.randint(0, 1000)
                     responseString += ". "
-                    matchWord = random.choice(list(frequency_table.keys()))       
+                    matchWord = random.choice(list(table.keys()))       
     print(responseString)
-    text += prompt + ". " + responseString + ". "
+    newLine = str(text + prompt + ". " + responseString + ". ")
+    newText = open("book2.txt", "w", encoding="UTF-8")
+    newText.write(newLine)
     nexties = convertTextToNextTable(text)
     new_frequency_table = convertTableToFreqTable(nexties)
-    file2 = open("model.txt", "w");
+    file2 = open("model.txt", "w", encoding="UTF-8")
     file2.write(str(new_frequency_table))
     
-
-
 exists = False
 
 try:
@@ -90,7 +95,7 @@ if exists:
     againFile = file.read()
     frequency_table = json.loads(againFile.replace("\'", "\""))
     userValue = input("What would you like a response for? ")
-    respond(userValue, text)
+    respond(userValue, text, frequency_table)
 else: 
     nexties = convertTextToNextTable(text)
     frequency_table = convertTableToFreqTable(nexties)
